@@ -3,3 +3,4 @@ protobuf==5.28.2
 six==1.16.0
 tensorflow @ https://storage.googleapis.com/tensorflow/mac/cpu/tensorflow-1.0.0-py3-none-any.whl#sha256=5625a11f61a576d12161c5c7488eef7fa03b72508968624610e4667fea82defa
 wheel==0.44.0
+Flask
