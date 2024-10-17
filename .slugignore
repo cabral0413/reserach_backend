@@ -1,13 +1,34 @@
-# Exclude Python virtual environments
+# Ignore virtual environments
 venv/
 env/
+.venv/
+ENV/
+env.bak/
 
-# Exclude local configuration files
-.env
-.git/
-.DS_Store
-
-# Exclude cache and test files
+# Ignore cache files
 __pycache__/
 *.pyc
+*.pyo
+
+# Ignore local development files
+*.log
+*.sqlite3
+*.db
+*.pid
+*.pkl
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Ignore tests and documentation
 tests/
+docs/
+*.md
+*.rst
+
+# Ignore configuration files
+*.env
+*.DS_Store
+.git/
+
