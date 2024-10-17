@@ -1,0 +1,13 @@
+# Exclude Python virtual environments
+venv/
+env/
+
+# Exclude local configuration files
+.env
+.git/
+.DS_Store
+
+# Exclude cache and test files
+__pycache__/
+*.pyc
+tests/
