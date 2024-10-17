@@ -9,6 +9,7 @@ env.bak/
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 
 # Ignore local development files
 *.log
@@ -20,6 +21,8 @@ __pycache__/
 dist/
 build/
 .eggs/
+*.so
+*.dll
 
 # Ignore tests and documentation
 tests/
@@ -31,4 +34,3 @@ docs/
 *.env
 *.DS_Store
 .git/
-
