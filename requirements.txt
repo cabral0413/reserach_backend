@@ -1,5 +1,5 @@
 Flask==3.0.3
 Flask_Cors==5.0.0
-numpy==2.1.2
-onnxruntime==1.19.2
 Pillow==11.0.0
+ultralytics==8.3.17
+torch==1.11.0+cpu  # This ensures the installation of the CPU-only version of PyTorch

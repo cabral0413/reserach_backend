@@ -1,30 +1,18 @@
 from flask import Flask, request, jsonify
+from ultralytics import YOLO
 from PIL import Image, ImageOps
 from flask_cors import CORS
 import io
 import os
-import onnxruntime as ort
-import numpy as np
 
 app = Flask(__name__)
 CORS(app)
 
-# Load ONNX models during startup
-onnx_detection_model_path = 'models/best.onnx'  # ONNX model for object detection
-onnx_classification_model_path = 'models/bestc.onnx'  # ONNX model for classification
-
-detection_session = ort.InferenceSession(onnx_detection_model_path)
-classification_session = ort.InferenceSession(onnx_classification_model_path)
+# Load the models once during startup
+yolo_model = YOLO('models/best.pt')  # YOLO model for object detection and cropping
+classification_model = YOLO('models/bestc.pt')  # Model for classification
 
 CONFIDENCE_THRESHOLD = 0.5  # Set a confidence threshold for valid detections
-
-def preprocess_image(image):
-    """ Preprocess the image for inference. Convert to numpy array and normalize. """
-    image = image.resize((640, 640))  # Resize to 640x640 (YOLO size)
-    img_np = np.array(image).astype(np.float32)
-    img_np = np.transpose(img_np, (2, 0, 1)) / 255.0  # Normalize and convert to CHW format
-    img_np = np.expand_dims(img_np, axis=0)
-    return img_np
 
 @app.route('/classify', methods=['POST'])
 def predict():
@@ -32,69 +20,60 @@ def predict():
         file = request.files['image']
         img = Image.open(file.stream).convert("RGB")  # Ensure it's in RGB format
 
-        # Preprocess the image for object detection
-        img_np = preprocess_image(img)
+        # Run YOLO for object detection
+        detection_results = yolo_model(img)
 
-        # Run ONNX detection model
-        detection_inputs = {detection_session.get_inputs()[0].name: img_np}
-        detection_results = detection_session.run(None, detection_inputs)
+        # Debugging: Print detection results
+        print("Detection Results:", detection_results)
 
-        # Process detection results (assuming results are in a specific format)
-        boxes, scores, labels = detection_results[0], detection_results[1], detection_results[2]
-        
-        # Filter out detections below confidence threshold
-        valid_detections = [(box, score, label) for box, score, label in zip(boxes, scores, labels)
-                            if score > CONFIDENCE_THRESHOLD]
-
-        if len(valid_detections) == 0:
+        # Check if any detections are made
+        if len(detection_results) == 0 or len(detection_results[0].boxes) == 0:
             return jsonify({'message': 'No objects detected in the image.'}), 200
 
-        # Select the best detection
-        best_box, best_score, best_label = max(valid_detections, key=lambda x: x[1])
+        # Filter to keep only the most confident detection above threshold
+        best_box = max(detection_results[0].boxes, key=lambda box: box.conf)
+        if best_box.conf < CONFIDENCE_THRESHOLD:
+            return jsonify({'message': 'No valid snake detected. Please upload a clearer image.'}), 200
 
-        # Crop and preprocess the image for classification
-        box_coords = best_box.tolist()
+        box_coords = best_box.xyxy[0].tolist()  # Convert to list of coordinates
+        print(f"Cropping coordinates: {box_coords}")  # Debugging: Print cropping coordinates
+
         cropped_img = img.crop(box_coords)  # Crop using bounding box coordinates
-        padded_img = ImageOps.pad(cropped_img, (224, 224), method=Image.Resampling.LANCZOS)  # Resize to 224x224
-        
-        # Preprocess the cropped image for classification
-        padded_img_np = preprocess_image(padded_img)
 
-        # Run ONNX classification model
-        classification_inputs = {classification_session.get_inputs()[0].name: padded_img_np}
-        classification_results = classification_session.run(None, classification_inputs)
+        # Add padding to the cropped image to prevent distortion
+        padded_img = ImageOps.pad(cropped_img, (224, 224), method=Image.Resampling.LANCZOS)
 
-        # Assuming classification result is a softmax vector
-        probabilities = classification_results[0]
-        top_class_idx = np.argmax(probabilities)
-        top_confidence = probabilities[0][top_class_idx]
-        
-        # If the classification confidence is below threshold, reject the result
-        if top_confidence < CONFIDENCE_THRESHOLD:
-            return jsonify({
-                'message': 'No valid snake detected. Please upload a clearer image.',
-                'class': 'Unknown',
-                'probability': "{:.2%}".format(top_confidence)
-            }), 200
+        # Perform classification on the padded image
+        classification_results = classification_model(padded_img)
 
-        # Get the class name based on top_class_idx (assuming a fixed class list)
-        class_names = ['Common Indian Krait', 'Python', 'Hump Nosed Viper', 'Green Vine Snake', 'Russells Viper', 'Indian Cobra']
-        top_class = class_names[top_class_idx]
+        # Process the classification results
+        predictions = []
+        for result in classification_results:
+            top_class = result.names[result.probs.top1]
+            top_confidence = result.probs.top1conf.item()
 
-        # Determine venom status
-        venom_status = get_venom_status(top_class)
+            # If the classification confidence is below threshold, reject the result
+            if top_confidence < CONFIDENCE_THRESHOLD:
+                return jsonify({
+                    'message': 'No valid snake detected. Please upload a clearer image.',
+                    'class': top_class,
+                    'probability': "{:.2%}".format(top_confidence)
+                }), 200
 
-        # Format the probability as a percentage with two decimal points
-        formatted_prob = "{:.2%}".format(top_confidence)
+            # Determine venom status
+            venom_status = get_venom_status(top_class)
 
-        # Return the prediction
-        return jsonify({
-            'predictions': [{
+            # Format the probability as a percentage with two decimal points
+            formatted_prob = "{:.2%}".format(top_confidence)
+
+            # Append to predictions
+            predictions.append({
                 'class': top_class,
                 'probability': formatted_prob,
                 'venom_status': venom_status
-            }]
-        }), 200
+            })
+
+        return jsonify({'predictions': predictions}), 200
 
     except Exception as e:
         print(f"Error: {str(e)}")
