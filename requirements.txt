@@ -1,9 +1,10 @@
 Flask==3.0.3
-Flask_Cors==5.0.0
-Pillow==11.0.0
+Flask-Cors==5.0.0
 ultralytics==8.3.18
-torch==2.5.0+cpu
+torch==2.4.1+cpu
 torchvision==0.20.0+cpu
+Pillow==11.0.0
 numpy==2.1.2
 opencv-python-headless==4.10.0.84
 requests==2.32.3
+-f https://download.pytorch.org/whl/cpu
