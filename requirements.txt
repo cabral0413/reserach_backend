@@ -80,8 +80,10 @@ soupsieve==2.6
 stack-data==0.6.3
 sympy==1.13.1
 tinycss2==1.3.0
-torch @ https://download.pytorch.org/whl/cpu/torch-1.10.0%2Bcpu-cp38-cp38-linux_x86_64.whl#sha256=4c4e1cd4cf4dceff2797f9fc167fe5da31682b4fa09fec1002d89114965bf680
-torchvision @ https://download.pytorch.org/whl/cpu/torchvision-0.11.3%2Bcpu-cp38-cp38-linux_x86_64.whl#sha256=69717f639f656e869bae1235b0de55b530d26c65543f6a719ba761139f378bea
+#torch @ https://download.pytorch.org/whl/cpu/torch-1.10.0%2Bcpu-cp38-cp38-linux_x86_64.whl#sha256=4c4e1cd4cf4dceff2797f9fc167fe5da31682b4fa09fec1002d89114965bf680
+#torchvision @ https://download.pytorch.org/whl/cpu/torchvision-0.11.3%2Bcpu-cp38-cp38-linux_x86_64.whl#sha256=69717f639f656e869bae1235b0de55b530d26c65543f6a719ba761139f378bea
+torch==2.5.0+cpu
+torchvision==0.20.0+cpu
 tornado==6.4.1
 tqdm==4.66.5
 traitlets==5.14.3
