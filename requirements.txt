@@ -3,6 +3,6 @@ Flask-Cors==5.0.0
 opencv-python-headless
 opencv-contrib-python
 --extra-index-url https://download.pytorch.org/whl/cpu
-ultralytics
+ultralytics==8.0.65  # Ensure it installs the latest stable version
 Pillow==11.0.0
 

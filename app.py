@@ -2,15 +2,14 @@ from flask import Flask, request, jsonify
 from ultralytics import YOLO
 from PIL import Image, ImageOps
 from flask_cors import CORS
-import io
-import os
+
 
 app = Flask(__name__)
 CORS(app)
 
 # Load the models once during startup
-yolo_model = YOLO('models/best.pt')  # YOLO model for object detection and cropping
-classification_model = YOLO('models/bestc.pt')  # Model for classification
+yolo_model = YOLO('best.pt')  # YOLO model for object detection and cropping
+classification_model = YOLO('bestc.pt')  # Model for classification
 
 CONFIDENCE_THRESHOLD = 0.5  # Set a confidence threshold for valid detections
 
@@ -91,5 +90,4 @@ def get_venom_status(class_name):
     return venom_status_map.get(class_name, 'Unknown')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
-    
+    app.run(host='0.0.0.0', port=5000, debug=False)
